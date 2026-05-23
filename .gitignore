@@ -1,0 +1,57 @@
+# Unity generated
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+# Unity3D generated meta files
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+# Unity3D generated file on crash reports
+sysinfo.txt
+
+# Builds
+*.apk
+*.aab
+*.unitypackage
+*.app
+
+# Crashlytics generated file
+crashlytics-build.properties
+
+# Rider
+.idea/
+*.sln
+*.csproj
+
+# Visual Studio
+.vs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Packages — include manifest, exclude cache
+!/[Pp]ackages/manifest.json
+!/[Pp]ackages/packages-lock.json
+/[Pp]ackages/*/*
+!/[Pp]ackages/*/package.json
+!/[Pp]ackages/*/[Ee]ditor/
+
+# Asset Store tools
+[Aa]ssets/AssetStoreTools*
+
+# TextMesh Pro
+[Aa]ssets/TextMesh*
+
+# Photon / Steam 설정 파일 (API 키 노출 방지)
+[Aa]ssets/Photon/PhotonUnityNetworking/Resources/PhotonServerSettings.asset
+[Aa]ssets/StreamingAssets/
+
+# Steamworks 로컬 설정
+steam_appid.txt
