@@ -1,0 +1,55 @@
+name: Unity EditMode Tests
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'Assets/Scripts/**'
+      - 'Assets/Tests/**'
+      - 'Packages/**'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'Assets/Scripts/**'
+      - 'Assets/Tests/**'
+      - 'Packages/**'
+
+jobs:
+  test:
+    name: EditMode Test Runner
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Cache Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: Library-
+
+      - name: Run EditMode Tests
+        uses: game-ci/unity-test-runner@v4
+        id: tests
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          projectPath: .
+          testMode: EditMode
+          artifactsPath: test-results
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          checkName: EditMode Test Results
+
+      - name: Upload Test Results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results-editmode
+          path: ${{ steps.tests.outputs.artifactsPath }}
+          retention-days: 7
