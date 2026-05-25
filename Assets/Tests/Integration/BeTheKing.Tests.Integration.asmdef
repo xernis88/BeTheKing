@@ -6,7 +6,8 @@
         "UnityEditor.TestRunner",
         "Unity.Netcode.Runtime",
         "BeTheKing.Foundation",
-        "BeTheKing.CoreServices"
+        "BeTheKing.CoreServices",
+        "BeTheKing.GameplaySystems"
     ],
     "includePlatforms": [
         "Editor"
