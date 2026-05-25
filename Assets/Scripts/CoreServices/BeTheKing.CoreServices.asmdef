@@ -1,0 +1,17 @@
+{
+    "name": "BeTheKing.CoreServices",
+    "rootNamespace": "BeTheKing.CoreServices",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "BeTheKing.Foundation"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
