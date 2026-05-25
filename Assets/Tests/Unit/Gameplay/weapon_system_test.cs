@@ -82,7 +82,7 @@ namespace BeTheKing.Tests.Unit.Gameplay
     internal static class WeaponFixtures
     {
         // 등급별 검 — AC-1 등급 순서 검증용 (QA Test Cases 기준)
-        public static WeaponStats SwordCommon  => new() { Type = WeaponType.Sword, Grade = WeaponGrade.Common, AttackPower = 10f, AttackRange = 2.0f, AttackCooldown = 0.6f };
+        public static WeaponStats SwordCommon  => new() { Type = WeaponType.Sword, Grade = WeaponGrade.Common, AttackPower = 12f, AttackRange = 2.0f, AttackCooldown = 0.6f };
         public static WeaponStats SwordRare    => new() { Type = WeaponType.Sword, Grade = WeaponGrade.Rare,   AttackPower = 15f, AttackRange = 2.0f, AttackCooldown = 0.6f };
         public static WeaponStats SwordHero    => new() { Type = WeaponType.Sword, Grade = WeaponGrade.Hero,   AttackPower = 22f, AttackRange = 2.0f, AttackCooldown = 0.6f };
 
