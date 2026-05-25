@@ -42,6 +42,7 @@ jobs:
         with:
           projectPath: .
           testMode: EditMode
+          unityVersion: 6000.0.45f1
           artifactsPath: test-results
           githubToken: ${{ secrets.GITHUB_TOKEN }}
           checkName: EditMode Test Results
