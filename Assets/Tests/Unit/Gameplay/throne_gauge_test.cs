@@ -119,6 +119,35 @@ namespace BeTheKing.Tests.Unit.Gameplay
 
         /// <summary>SyncCallCount 카운터를 초기화한다.</summary>
         public void ResetSyncCount() => SyncCallCount = 0;
+
+        /// <summary>
+        /// RoyalGaugeSystem.GetHighestCumulativePlayer()에 대응하는 테스트용 진입점.
+        /// cumulative + 현재 inZone gauge 합산 기준 최고점 플레이어를 반환한다.
+        /// </summary>
+        public ulong? GetHighestCumulativePlayer()
+        {
+            ulong? best = null;
+            float bestScore = float.MinValue;
+
+            var allTracked = new HashSet<ulong>(_cumulative.Keys);
+            foreach (ulong id in _inZone) allTracked.Add(id);
+
+            var sorted = new List<ulong>(allTracked);
+            sorted.Sort();
+
+            foreach (ulong id in sorted)
+            {
+                float score = _cumulative.GetValueOrDefault(id, 0f)
+                            + _gauges.GetValueOrDefault(id, 0f);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = id;
+                }
+            }
+
+            return best;
+        }
     }
 
     // ──────────────────────────────────────────────────────────
@@ -440,6 +469,89 @@ namespace BeTheKing.Tests.Unit.Gameplay
             // Assert
             Assert.AreEqual(0, _gauge.SyncCallCount,
                 "영역 내 플레이어가 없으면 SyncGaugeClientRpc가 호출되지 않아야 한다.");
+        }
+    }
+
+    // ──────────────────────────────────────────────────────────
+    // TC-VE002-9: GetHighestCumulativePlayer — 타임아웃 승자 선정
+    // ──────────────────────────────────────────────────────────
+
+    [TestFixture]
+    [Category("RoyalGaugeSystem")]
+    public class ThroneGaugeHighestCumulativeTests
+    {
+        private TestableRoyalGaugeSystem _gauge;
+        private const ulong ClientA = 1UL;
+        private const ulong ClientB = 2UL;
+        private const ulong ClientC = 3UL;
+
+        [SetUp]
+        public void SetUp() => _gauge = new TestableRoyalGaugeSystem();
+
+        /// <summary>TC-VE002-9a: 누적 포인트가 다를 때 최고값 보유자가 반환된다.</summary>
+        [Test]
+        public void test_highestCumulative_differentScores_returnsHighestPlayer()
+        {
+            // Arrange
+            _gauge._cumulative[ClientA] = 80f;
+            _gauge._cumulative[ClientB] = 120f;
+            _gauge._cumulative[ClientC] = 50f;
+
+            // Act
+            ulong? winner = _gauge.GetHighestCumulativePlayer();
+
+            // Assert
+            Assert.AreEqual(ClientB, winner,
+                "누적 포인트가 가장 높은 B(120)가 승자여야 한다.");
+        }
+
+        /// <summary>TC-VE002-9b: inZone 상태인 플레이어의 현재 게이지도 합산된다.</summary>
+        [Test]
+        public void test_highestCumulative_inZoneBonus_changesRanking()
+        {
+            // Arrange — A는 누적 100, B는 누적 80이지만 inZone + gauge 30
+            _gauge._cumulative[ClientA] = 100f;
+            _gauge._cumulative[ClientB] = 80f;
+            _gauge._gauges[ClientB] = 30f;
+            _gauge._inZone.Add(ClientB);
+
+            // Act
+            ulong? winner = _gauge.GetHighestCumulativePlayer();
+
+            // Assert — B(80+30=110) > A(100+0=100)
+            Assert.AreEqual(ClientB, winner,
+                "inZone 보정 포함 시 B(80+30=110)가 A(100)보다 높아 B가 승자여야 한다.");
+        }
+
+        /// <summary>TC-VE002-9c: 동점 시 clientId 오름차순(낮은 값)이 승자가 된다.</summary>
+        [Test]
+        public void test_highestCumulative_tieBreak_lowerClientIdWins_TBD()
+        {
+            // Arrange — A(id=1)와 B(id=2) 동점
+            _gauge._cumulative[ClientA] = 100f;
+            _gauge._cumulative[ClientB] = 100f;
+
+            // Act
+            ulong? winner = _gauge.GetHighestCumulativePlayer();
+
+            // Assert — 낮은 clientId 우선 (TBD: 생존 시간 기준으로 변경 예정)
+            Assert.AreEqual(ClientA, winner,
+                "[TBD] 동점 시 clientId 오름차순(A=1)이 승자여야 한다. " +
+                "향후 생존 시간 기준으로 정책 변경 예정.");
+        }
+
+        /// <summary>TC-VE002-9d: 추적된 플레이어 없을 때 null을 반환한다.</summary>
+        [Test]
+        public void test_highestCumulative_noTrackedPlayers_returnsNull()
+        {
+            // Arrange — _cumulative, _inZone 모두 비어있음
+
+            // Act
+            ulong? winner = _gauge.GetHighestCumulativePlayer();
+
+            // Assert
+            Assert.IsNull(winner,
+                "추적된 플레이어가 없을 때 GetHighestCumulativePlayer()는 null을 반환해야 한다.");
         }
     }
 }

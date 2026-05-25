@@ -151,6 +151,44 @@ namespace BeTheKing.GameplaySystems
             }
         }
 
+        // ── 타임아웃 승리 지원 API ───────────────────────────────────────────────
+
+        /// <summary>
+        /// 누적 포인트(cumulative + 현재 inZone gauge) 기준 최고점 플레이어를 반환한다.
+        /// <para>
+        ///   영역 이탈 없이 아직 inZone 상태인 플레이어의 게이지도 cumulative에 합산하여 계산한다.
+        ///   동점 시 clientId 오름차순으로 낮은 값이 승자.
+        /// </para>
+        /// <para>[TBD] GDD §5 — 동점 처리 정책 미확정. 현재 clientId 오름차순, 향후 생존 시간 기준으로 변경 예정.</para>
+        /// </summary>
+        /// <returns>최고 누적 포인트 보유자의 clientId. 추적된 플레이어가 없으면 null.</returns>
+        public ulong? GetHighestCumulativePlayer()
+        {
+            ulong? best = null;
+            float bestScore = float.MinValue;
+
+            // _cumulative와 _inZone 모두 포함한 추적 대상 집합
+            var allTracked = new HashSet<ulong>(_cumulative.Keys);
+            foreach (ulong id in _inZone) allTracked.Add(id);
+
+            // 결정적 순서를 위해 clientId 오름차순 정렬 (동점 시 낮은 clientId 우선)
+            var sorted = new List<ulong>(allTracked);
+            sorted.Sort();
+
+            foreach (ulong id in sorted)
+            {
+                float score = _cumulative.GetValueOrDefault(id, 0f)
+                            + _gauges.GetValueOrDefault(id, 0f);
+                if (score > bestScore)
+                {
+                    bestScore = score;
+                    best = id;
+                }
+            }
+
+            return best;
+        }
+
         // ── RPC ────────────────────────────────────────────────────────────────
 
         /// <summary>
