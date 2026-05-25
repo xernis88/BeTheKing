@@ -31,7 +31,6 @@ namespace BeTheKing.CoreServices
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
         }
 
         public override void OnDestroy()
@@ -44,18 +43,11 @@ namespace BeTheKing.CoreServices
 
         public override void OnNetworkSpawn()
         {
-            if (IsServer && SessionTimeManager.Instance != null)
-                SessionTimeManager.Instance.OnCoronationStarted += HandleCoronationStarted;
-
             // 게임 시작 시(1~2일차) 성문 폐쇄 보장 — AC-2
             SetGateColliders(enabled: true);
         }
 
-        public override void OnNetworkDespawn()
-        {
-            if (IsServer && SessionTimeManager.Instance != null)
-                SessionTimeManager.Instance.OnCoronationStarted -= HandleCoronationStarted;
-        }
+        public override void OnNetworkDespawn() { }
 
         // ── Public API ─────────────────────────────────────────────────────────
 
@@ -80,9 +72,10 @@ namespace BeTheKing.CoreServices
 
         // ── Gate control ───────────────────────────────────────────────────────
 
-        private void HandleCoronationStarted()
+        /// <summary>성문을 개방한다. CoronationTrigger에서 호출. 서버 전용.</summary>
+        public void OpenGates()
         {
-            // Server-only 진입점 — IsServer는 OnNetworkSpawn에서 보장
+            if (!IsServer) return;
             OpenGatesServerInternal();
         }
 
