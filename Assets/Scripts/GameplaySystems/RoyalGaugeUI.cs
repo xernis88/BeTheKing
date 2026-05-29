@@ -1,6 +1,7 @@
 // Implements: design/gdd/04-victory-endgame.md — RoyalGaugeVisibility
 // Story: production/epics/epic-victory-endgame/story-004-royal-gauge-visibility.md
-// Requirement: TR-VICT-008
+//        production/epics/epic-ui-presentation/story-003-royal-gauge-ui-polish.md (UI-003)
+// Requirement: TR-VICT-008, TR-UI-004, TR-UI-005
 //
 // 설계 결정:
 //   - MonoBehaviour (NetworkBehaviour 아님): 렌더링 전용, 서버 로직 없음.
@@ -13,6 +14,7 @@
 //   - Slider 정규화: currentGauge / gaugeSystem.MaxGauge (Inspector 튜닝값 live-read).
 //   - 가시성: current > 0f 이면 _gaugeRoot 활성, 0이면 비활성.
 //   - 색상 임계값: < 60 초록, < 96 노랑, >= 96 빨강.
+//   - UI-003 Polish: _arcImage.fillAmount 호형 게이지, LateUpdate에서 Color.Lerp 점진적 전환.
 
 using Unity.Netcode;
 using UnityEngine;
@@ -44,6 +46,9 @@ namespace BeTheKing.GameplaySystems
         [Tooltip("색상 변경 대상 Slider Fill Image.")]
         [SerializeField] private Image _fillImage;
 
+        [Tooltip("UI-003 호형(arc) 게이지 Image. type=Filled(Radial360) 설정 필요. fillAmount로 진행도 표현.")]
+        [SerializeField] private Image _arcImage;
+
         // ── 상수 ───────────────────────────────────────────────────────────────
 
         /// <summary>색상 임계값: 초록 상한. gauge < 60 → 초록.</summary>
@@ -68,6 +73,8 @@ namespace BeTheKing.GameplaySystems
         private Camera            _camera;
         private NetworkObject     _netObj;
         private RoyalGaugeSystem  _gaugeSystem;
+        // UI-003: 매 프레임 Color.Lerp 적용을 위해 현재 게이지 값을 보유.
+        private float             _currentGauge;
 
         // ── 생명주기 ───────────────────────────────────────────────────────────
 
@@ -113,6 +120,11 @@ namespace BeTheKing.GameplaySystems
 
             if (_camera != null)
                 transform.forward = _camera.transform.forward;
+
+            // UI-003: _arcImage 색상을 매 프레임 Color.Lerp로 점진적 전환 (AC-4).
+            if (_arcImage != null && _currentGauge > 0f)
+                _arcImage.color = Color.Lerp(_arcImage.color, GetGaugeColor(_currentGauge),
+                                             Time.deltaTime * 5f);
         }
 
         // ── 이벤트 핸들러 ──────────────────────────────────────────────────────
@@ -138,10 +150,17 @@ namespace BeTheKing.GameplaySystems
 
             float maxGauge = _gaugeSystem != null ? _gaugeSystem.MaxGauge : 120f;
 
+            _currentGauge = current;
+
             if (_gaugeSlider != null)
                 _gaugeSlider.value = current / maxGauge;
 
-            if (_fillImage != null)
+            // UI-003: _arcImage fillAmount (호형 게이지). 색상 lerp는 LateUpdate에서 처리.
+            if (_arcImage != null)
+                _arcImage.fillAmount = current / maxGauge;
+
+            // _fillImage snap 색상은 하위 호환 유지 (Inspector에서 _arcImage 미설정 시 사용)
+            if (_fillImage != null && _arcImage == null)
                 _fillImage.color = GetGaugeColor(current);
         }
 

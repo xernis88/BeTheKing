@@ -69,6 +69,12 @@ namespace BeTheKing.GameplaySystems
         /// </summary>
         public event System.Action OnHoldCancelled;
 
+        /// <summary>
+        /// 홀드 진행 중 매 프레임 발행. 진행도(0~1)를 전달한다.
+        /// InteractionUI의 홀드 슬라이더 갱신에 사용된다.
+        /// </summary>
+        public event System.Action<float> OnHoldProgress;
+
         // ── 프로퍼티 ──────────────────────────────────────────────────────────
 
         /// <summary>설정된 홀드 완료 시간(초). 테스트 및 UI에서 읽기 가능.</summary>
@@ -87,6 +93,7 @@ namespace BeTheKing.GameplaySystems
             if (!_isHolding || !IsOwner) return;
 
             _holdProgress += Time.deltaTime;
+            OnHoldProgress?.Invoke(Mathf.Clamp01(_holdProgress / _holdDuration));
 
             if (_holdProgress >= _holdDuration)
             {

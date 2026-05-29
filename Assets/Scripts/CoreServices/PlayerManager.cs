@@ -37,6 +37,16 @@ namespace BeTheKing.CoreServices
         public event Action<ulong> OnPlayerSpawned;
         public event Action<ulong> OnPlayerDied;
 
+        /// <summary>전 클라이언트에 브로드캐스트되는 사망 공지 이벤트. UI 레이어에서 구독.</summary>
+        public static event Action<ulong> OnPlayerDeathAnnounced;
+
+        /// <summary>
+        /// OnPlayerDeathAnnounced 이벤트를 발행한다.
+        /// AnnouncePlayerDeathClientRpc 수신 시 호출되며, unit test에서 직접 호출 가능하다.
+        /// </summary>
+        internal static void RaiseOnPlayerDeathAnnounced(ulong clientId)
+            => OnPlayerDeathAnnounced?.Invoke(clientId);
+
         // ── Lifecycle ──────────────────────────────────────────
 
         void Awake()
@@ -151,8 +161,19 @@ namespace BeTheKing.CoreServices
             }
 
             OnPlayerDied?.Invoke(clientId);
+            AnnouncePlayerDeathClientRpc(clientId);
             if (_aliveCount.Value > 0) _aliveCount.Value--;
             Debug.Log($"[PlayerManager] 사망 처리 완료 — clientId={clientId}");
+        }
+
+        /// <summary>
+        /// 전 클라이언트에 사망 공지를 브로드캐스트한다.
+        /// 공개 정보(clientId)만 전달 — 신원(역할·IsTarget 등)은 절대 포함하지 않는다.
+        /// </summary>
+        [ClientRpc]
+        private void AnnouncePlayerDeathClientRpc(ulong clientId)
+        {
+            OnPlayerDeathAnnounced?.Invoke(clientId);
         }
 
         // ── Identity API ───────────────────────────────────────
