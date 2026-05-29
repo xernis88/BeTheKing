@@ -10,7 +10,7 @@ namespace BeTheKing.CoreServices
     /// <summary>
     /// 플레이어 스폰·사망·정체(Identity) 배정을 담당한다.
     /// 서버 권위적: 모든 스폰·정체 배정 로직은 IsServer 가드 안에서만 실행된다.
-    /// ADR-004: _identityMap 키 해싱 적용.
+    /// Host Migration 내성: 정체 정보를 NetworkList로 영속화하여 새 Host에서도 유지된다.
     /// </summary>
     public class PlayerManager : NetworkBehaviour
     {
@@ -18,8 +18,20 @@ namespace BeTheKing.CoreServices
 
         [SerializeField] private GameObject _playerPrefab;
 
-        // ADR-004: 키 해싱 — ulong 원본값 대신 int 모듈러 해시로 저장 (메모리 덤프 가독성 저하)
-        private readonly Dictionary<int, PlayerIdentity> _identityMap = new();
+        // Host Migration 내성: NetworkList로 영속화.
+        // Owner = 서버(Host) 소유 scene object이므로 클라이언트는 이 데이터를 수신하지 않음.
+        private readonly NetworkList<PlayerIdentityEntry> _identityList = new(
+            default,
+            NetworkVariableReadPermission.Owner,
+            NetworkVariableWritePermission.Owner
+        );
+
+        // 생존 플레이어 수. 서버 권위(Server write), 전체 클라이언트 읽기(Everyone read).
+        private readonly NetworkVariable<int> _aliveCount = new(
+            0, NetworkVariableReadPermission.Everyone, NetworkVariableWritePermission.Server);
+
+        /// <summary>생존 플레이어 수. 서버 권위, 전체 클라이언트 읽기 가능.</summary>
+        public NetworkVariable<int> AliveCount => _aliveCount;
 
         // ── Events ─────────────────────────────────────────────
         public event Action<ulong> OnPlayerSpawned;
@@ -95,12 +107,20 @@ namespace BeTheKing.CoreServices
                 }
                 no.SpawnAsPlayerObject(clientId);
 
-                bool isTarget    = (_identityMap.Count == 0);
-                int  key         = (int)(clientId % int.MaxValue);
-                _identityMap[key] = new PlayerIdentity { JobId = 0, IsTarget = isTarget };
+                bool isTarget = (_identityList.Count == 0);
+                _identityList.Add(new PlayerIdentityEntry
+                {
+                    ClientId = clientId,
+                    JobId    = 0,
+                    IsTarget = isTarget
+                });
 
                 OnPlayerSpawned?.Invoke(clientId);
-                Debug.Log($"[PlayerManager] 스폰 — clientId={clientId}, zone={SpawnPointHelper.GetZoneIndex(i)}, isTarget={isTarget}");
+                _aliveCount.Value++;
+                Debug.Log($"[PlayerManager] 스폰 — clientId={clientId}, zone={SpawnPointHelper.GetZoneIndex(i)}");
+#if UNITY_EDITOR
+                Debug.Log($"[PlayerManager][EDITOR ONLY] clientId={clientId}, isTarget={isTarget}");
+#endif
             }
         }
 
@@ -120,7 +140,18 @@ namespace BeTheKing.CoreServices
             else
                 Debug.LogWarning($"[PlayerManager] HandlePlayerDeath: NetworkObject 없음 — clientId={clientId}");
 
+            // _identityList에서 해당 엔트리 제거
+            for (int i = 0; i < _identityList.Count; i++)
+            {
+                if (_identityList[i].ClientId == clientId)
+                {
+                    _identityList.RemoveAt(i);
+                    break;
+                }
+            }
+
             OnPlayerDied?.Invoke(clientId);
+            if (_aliveCount.Value > 0) _aliveCount.Value--;
             Debug.Log($"[PlayerManager] 사망 처리 완료 — clientId={clientId}");
         }
 
@@ -130,28 +161,46 @@ namespace BeTheKing.CoreServices
         public int GetJobId(ulong clientId)
         {
             if (!IsServer) return -1;
-            int key = (int)(clientId % int.MaxValue);
-            return _identityMap.TryGetValue(key, out var id) ? id.JobId : -1;
+            foreach (var entry in _identityList)
+                if (entry.ClientId == clientId) return entry.JobId;
+            return -1;
         }
 
         /// <summary>서버 전용. 해당 클라이언트가 왕족 혈통인지 반환한다.</summary>
         public bool IsRoyalBlood(ulong clientId)
         {
             if (!IsServer) return false;
-            int key = (int)(clientId % int.MaxValue);
-            return _identityMap.TryGetValue(key, out var id) && id.IsTarget;
+            foreach (var entry in _identityList)
+                if (entry.ClientId == clientId) return entry.IsTarget;
+            return false;
         }
     }
 
     // ── 데이터 타입 ─────────────────────────────────────────────
 
-    /// <summary>플레이어 1인의 정체 정보. 서버 메모리에만 존재한다.</summary>
-    public struct PlayerIdentity
+    /// <summary>
+    /// 플레이어 1인의 정체 정보. NetworkList 직렬화용.
+    /// ReadPermission.Server 설정으로 클라이언트에 노출되지 않는다.
+    /// Host Migration 시 새 Host의 NetworkList에 자동 복원된다.
+    /// </summary>
+    public struct PlayerIdentityEntry : INetworkSerializable, IEquatable<PlayerIdentityEntry>
     {
+        /// <summary>소유 클라이언트 ID.</summary>
+        public ulong ClientId;
         /// <summary>직업 ID. MVP: 항상 0.</summary>
-        public int  JobId;
+        public int   JobId;
         /// <summary>왕족 혈통 여부. Host 메모리에만 존재, 네트워크 전송 금지.</summary>
-        public bool IsTarget;
+        public bool  IsTarget;
+
+        public void NetworkSerialize<T>(BufferSerializer<T> serializer) where T : IReaderWriter
+        {
+            serializer.SerializeValue(ref ClientId);
+            serializer.SerializeValue(ref JobId);
+            serializer.SerializeValue(ref IsTarget);
+        }
+
+        public bool Equals(PlayerIdentityEntry other) => ClientId == other.ClientId;
+        public override int GetHashCode() => ClientId.GetHashCode();
     }
 
     // ── 스폰 위치 헬퍼 ──────────────────────────────────────────

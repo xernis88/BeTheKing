@@ -33,6 +33,10 @@ namespace BeTheKing.GameplaySystems
         [Tooltip("무기 등급 (일반/희귀/영웅).")]
         public WeaponGrade grade;
 
+        [Header("UI")]
+        [Tooltip("HUD 무기 슬롯에 표시할 아이콘 스프라이트.")]
+        public Sprite icon;
+
         [Header("전투 스탯 — 밸런스 시 확정")]
         [Tooltip("기본 공격력. 등급이 높을수록 크다.")]
         public float attackPower;
