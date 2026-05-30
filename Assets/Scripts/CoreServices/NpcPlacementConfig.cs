@@ -15,22 +15,22 @@ namespace BeTheKing.CoreServices
     public sealed class NpcPlacementConfig : ScriptableObject
     {
         [Header("Civilian NPC")]
-        [Tooltip("구역당 일반 NPC 수. 4구역 × 이 값 = 총 일반 NPC 수. GDD 기준: 17~18 → 총 ~70명")]
-        [Range(10, 25)]
-        public int CivilianPerZone = 17;
+        [Tooltip("구역당 일반 NPC 수. MVP=1(총 4), 풀비전=17(총 ~70). ADR-003: NPC≥15 시 NpcUpdateScheduler 필수.")]
+        [Range(1, 25)]
+        public int CivilianPerZone = 1;
 
         [Tooltip("프리워밍 풀 크기. CivilianPerZone × 4 이상 권장.")]
-        [Range(40, 100)]
-        public int CivilianPrewarm = 70;
+        [Range(1, 100)]
+        public int CivilianPrewarm = 4;
 
         [Header("Assassin NPC")]
-        [Tooltip("구역당 자객 NPC 수. GDD 기준: 2~3 → 총 8~10마리")]
+        [Tooltip("구역당 자객 NPC 수. MVP=1(총 4), 풀비전=2~3(총 8~10).")]
         [Range(1, 5)]
-        public int AssassinPerZone = 2;
+        public int AssassinPerZone = 1;
 
         [Tooltip("프리워밍 풀 크기. AssassinPerZone × 4 이상 권장.")]
-        [Range(4, 20)]
-        public int AssassinPrewarm = 10;
+        [Range(1, 20)]
+        public int AssassinPrewarm = 4;
 
         [Header("Job Copy")]
         [Tooltip("일반 NPC에 플레이어 직업 복장을 카피할 인원 수. GDD 기준: 3~4명")]
