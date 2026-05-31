@@ -14,8 +14,8 @@ GameObject:
   - component: {fileID: 1789403813772838124}
   - component: {fileID: 404019962154469711}
   - component: {fileID: 7452359791891066394}
-  - component: {fileID: 5270902190084067783}
   - component: {fileID: 787074543432359321}
+  - component: {fileID: 4496309693216019401}
   m_Layer: 0
   m_Name: CivilianNpc
   m_TagString: Untagged
@@ -165,18 +165,6 @@ NavMeshAgent:
   m_BaseOffset: 1
   m_WalkableMask: 4294967295
   m_ObstacleAvoidanceType: 4
---- !u!114 &5270902190084067783
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3014147251863706667}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 0}
-  m_Name: 
-  m_EditorClassIdentifier: BeTheKing.CoreServices::BeTheKing.CoreServices.CivilianNpc
 --- !u!114 &787074543432359321
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -195,3 +183,15 @@ MonoBehaviour:
   _wanderRadius: 10
   _waitDuration: 2
   _moveSpeed: 1.5
+--- !u!114 &4496309693216019401
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3014147251863706667}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9e3399bb5eb4a704d9c982db095c2fb5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: BeTheKing.CoreServices::BeTheKing.CoreServices.CivilianNpc
