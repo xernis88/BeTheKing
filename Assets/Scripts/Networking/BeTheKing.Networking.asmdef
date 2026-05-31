@@ -1,0 +1,20 @@
+{
+    "name": "BeTheKing.Networking",
+    "rootNamespace": "BeTheKing.Networking",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "Unity.Collections",
+        "BeTheKing.Foundation",
+        "BeTheKing.CoreServices",
+        "BeTheKing.GameplaySystems"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
