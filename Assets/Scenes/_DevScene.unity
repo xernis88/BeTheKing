@@ -463,9 +463,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: BeTheKing.CoreServices::BeTheKing.CoreServices.NPCManager
   ShowTopMostFoldoutHeaderGroup: 1
-  _civilianPrefab: {fileID: 0}
-  _assassinPrefab: {fileID: 0}
-  _princePrefab: {fileID: 0}
+  _civilianPrefab: {fileID: 3014147251863706667, guid: 381f95c362a9a5841835d8087eec89a0, type: 3}
+  _assassinPrefab: {fileID: 4703680444818795733, guid: 7b480ec945b96a24c8613723c8840810, type: 3}
+  _princePrefab: {fileID: 6005727493779124894, guid: 19b324cf6abb1b24a9e6189bf08e838b, type: 3}
   _config: {fileID: 0}
   _zoneBounds: []
 --- !u!114 &227936250
