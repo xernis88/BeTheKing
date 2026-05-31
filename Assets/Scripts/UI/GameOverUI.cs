@@ -105,8 +105,8 @@ namespace BeTheKing.UI
             int min = Mathf.FloorToInt(elapsed / 60f);
             int sec = Mathf.FloorToInt(elapsed % 60f);
 
-            if (_survivalTimeText != null) _survivalTimeText.text = $"생존 시간: {min}:{sec:D2}";
-            if (_killCountText    != null) _killCountText.text    = "처치: 0";
+            if (_survivalTimeText != null) _survivalTimeText.text = $"Survived: {min}:{sec:D2}"; // TODO: 한국어 폰트 임포트 후 교체
+            if (_killCountText    != null) _killCountText.text    = "Kills: 0";
             if (_gaugePointsText  != null) _gaugePointsText.text  = $"왕권 포인트: {_localCumulativeGauge:F0}";
             if (_lobbyButton      != null) _lobbyButton.interactable = true;
         }

@@ -85,10 +85,10 @@ namespace BeTheKing.UI
             if (totalSec == _lastDisplaySec) return;
             _lastDisplaySec = totalSec;
 
-            string phase = tm.Phase == DayPhase.Day ? "낮" : "밤";
+            string phase = tm.Phase == DayPhase.Day ? "Day" : "Night"; // TODO: 한국어 폰트 임포트 후 교체
             int    min   = totalSec / 60;
             int    sec   = totalSec % 60;
-            _timeText.text = $"{tm.CurrentDay}일차 — {phase} ({min}:{sec:D2} 남음)";
+            _timeText.text = $"Day {tm.CurrentDay} — {phase} ({min}:{sec:D2})";
         }
 
         // ── Event Handlers ─────────────────────────────────────────────────────
