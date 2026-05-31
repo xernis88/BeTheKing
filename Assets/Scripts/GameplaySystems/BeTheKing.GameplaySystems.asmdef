@@ -3,6 +3,7 @@
     "rootNamespace": "BeTheKing.GameplaySystems",
     "references": [
         "Unity.Netcode.Runtime",
+        "Unity.RenderPipelines.Universal.Runtime",
         "BeTheKing.Foundation",
         "BeTheKing.CoreServices"
     ],

@@ -117,7 +117,7 @@ namespace BeTheKing.GameplaySystems
         [ClientRpc]
         private void ApplyStatsClientRpc(ulong clientId, float hpDelta, float attackDelta, float staminaDelta)
         {
-            if ((ulong)OwnerClientId != clientId) return;
+            if (NetworkManager.Singleton.LocalClientId != clientId) return;
 
             Debug.Log($"[LevelSystem] 레벨업: clientId={clientId} HP+{hpDelta} ATK+{attackDelta} STA+{staminaDelta}");
             // TODO: PlayerStats.Instance?.ApplyLevelUpStats(hpDelta, attackDelta, staminaDelta)

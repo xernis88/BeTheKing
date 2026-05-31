@@ -34,6 +34,23 @@ namespace BeTheKing.GameplaySystems
         [Tooltip("발자국 자동 소멸 시간(초). ADR-008: 30초.")]
         [SerializeField] private float _lifetime = 30f;
 
+        // ── 싱글턴 (로컬 플레이어 소유 인스턴스) ────────────────────────────
+
+        /// <summary>로컬 플레이어의 FootprintSystem. IsOwner 인스턴스만 등록된다.</summary>
+        public static FootprintSystem Instance { get; private set; }
+
+        public override void OnNetworkSpawn()
+        {
+            if (IsOwner)
+                Instance = this;
+        }
+
+        public override void OnNetworkDespawn()
+        {
+            if (Instance == this)
+                Instance = null;
+        }
+
         // ── 런타임 상태 ────────────────────────────────────────────────────
 
         // 서버에서 현재 활성 상태인 발자국 NetworkObject 목록.

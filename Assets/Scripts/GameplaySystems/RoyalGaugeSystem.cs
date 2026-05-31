@@ -53,6 +53,19 @@ namespace BeTheKing.GameplaySystems
         /// </summary>
         public event Action<ulong, VictoryReason> OnVictoryConditionMet;
 
+        /// <summary>
+        /// 게이지 동기화 RPC가 클라이언트에 수신될 때 발행된다. (clientId, currentGauge, cumulative)
+        /// VE-004 RoyalGaugeVisibility 및 UI-001 HUDManager에서 구독하여 HUD를 갱신한다.
+        /// </summary>
+        public static event Action<ulong, float, float> OnGaugeSyncedToClient;
+
+        /// <summary>
+        /// OnGaugeSyncedToClient 이벤트를 발행한다.
+        /// SyncGaugeClientRpc 수신 시 호출되며, unit test에서 직접 호출 가능하다.
+        /// </summary>
+        internal static void RaiseOnGaugeSyncedToClient(ulong clientId, float gauge, float cumulative)
+            => OnGaugeSyncedToClient?.Invoke(clientId, gauge, cumulative);
+
         // ── 서버 전용 상태 ──────────────────────────────────────────────────────
 
         /// <summary>clientId별 현재 게이지 (서버 전용).</summary>
@@ -201,7 +214,7 @@ namespace BeTheKing.GameplaySystems
         [ClientRpc]
         internal void SyncGaugeClientRpc(ulong clientId, float gauge, float cumulative)
         {
-            // 클라이언트 측 UI 업데이트는 VE-004에서 이 RPC를 수신하여 처리한다.
+            RaiseOnGaugeSyncedToClient(clientId, gauge, cumulative);
         }
     }
 }

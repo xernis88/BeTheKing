@@ -43,6 +43,19 @@ namespace BeTheKing.GameplaySystems
         /// <summary>씬 내 단일 인스턴스 참조.</summary>
         public static VictoryManager Instance { get; private set; }
 
+        /// <summary>
+        /// 승리 공지 RPC가 클라이언트에 수신될 때 발행된다. (winnerId, reason)
+        /// UI-001 HUDManager 및 UI-005 GameOverUI에서 구독한다.
+        /// </summary>
+        public static event Action<ulong, VictoryReason> OnVictoryAnnounced;
+
+        /// <summary>
+        /// OnVictoryAnnounced 이벤트를 발행한다.
+        /// AnnounceWinnerClientRpc 수신 시 호출되며, unit test에서 직접 호출 가능하다.
+        /// </summary>
+        internal static void RaiseOnVictoryAnnounced(ulong winnerId, VictoryReason reason)
+            => OnVictoryAnnounced?.Invoke(winnerId, reason);
+
         // ── 서버 전용 상태 ──────────────────────────────────────────────────────
 
         /// <summary>승리 선언 후 추가 판정 차단 플래그 (서버 전용).</summary>
@@ -61,21 +74,14 @@ namespace BeTheKing.GameplaySystems
 
         // ── Lifecycle ──────────────────────────────────────────────────────────
 
-        private void Awake()
-        {
-            if (Instance != null)
-            {
-                Destroy(gameObject);
-                return;
-            }
-            Instance = this;
-        }
-
         /// <summary>
         /// NGO 스폰 시 이벤트 구독. 서버에서만 등록한다.
         /// </summary>
         public override void OnNetworkSpawn()
         {
+            if (IsServer)
+                Instance = this;
+
             if (!IsServer) return;
 
             // 게이지 120 도달 승리 구독
@@ -99,6 +105,9 @@ namespace BeTheKing.GameplaySystems
         /// </summary>
         public override void OnNetworkDespawn()
         {
+            if (IsServer && Instance == this)
+                Instance = null;
+
             if (_royalGaugeSystem != null)
                 _royalGaugeSystem.OnVictoryConditionMet -= HandleVictoryEvent;
 
@@ -214,7 +223,7 @@ namespace BeTheKing.GameplaySystems
         [ClientRpc]
         internal void AnnounceWinnerClientRpc(ulong winnerId, VictoryReason reason)
         {
-            // 클라이언트 측 게임 오버 연출은 VE-004(UI) 스토리에서 처리한다.
+            RaiseOnVictoryAnnounced(winnerId, reason);
             Debug.Log($"[VictoryManager] 승자 공지 수신 — winnerId={winnerId}, reason={reason}");
         }
     }

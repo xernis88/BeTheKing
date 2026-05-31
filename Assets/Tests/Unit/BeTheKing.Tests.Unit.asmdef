@@ -4,6 +4,7 @@
     "references": [
         "UnityEngine.TestRunner",
         "UnityEditor.TestRunner",
+        "Unity.Netcode.Runtime",
         "BeTheKing.GameplaySystems",
         "BeTheKing.CoreServices"
     ],

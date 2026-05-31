@@ -77,10 +77,11 @@ namespace BeTheKing.GameplaySystems
         {
             if (!IsServer) return;
 
-            _mapManager?.OpenGates();       // TR-VICT-001: 성문 개방
-            _prince?.Activate();            // TR-VICT-002: 왕자 NPC 활성화
-            _throneZone?.Activate();        // 왕좌 영역 감지 시작
-            NotifyAllClientsClientRpc();    // 전체 클라이언트 알림
+            _mapManager?.OpenGates();                          // TR-VICT-001: 성문 개방
+            NPCManager.Instance?.ActivatePrince();             // TR-VICT-002: 왕자 NetworkObject Spawn
+            _prince?.Activate();                               // TR-VICT-002: 왕자 NPC AI 활성화 (무적 해제)
+            _throneZone?.Activate();                           // 왕좌 영역 감지 시작
+            NotifyAllClientsClientRpc();                       // 전체 클라이언트 알림
         }
 
         // ── RPC ────────────────────────────────────────────────────────────────

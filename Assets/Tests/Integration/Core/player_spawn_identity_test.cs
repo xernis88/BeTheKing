@@ -115,20 +115,19 @@ namespace BeTheKing.Tests.Integration.Core
         public void test_identity_firstRegistered_isOnlyTarget()
         {
             // Arrange
-            var identityMap = new Dictionary<int, PlayerIdentity>();
+            var entries = new List<PlayerIdentityEntry>();
 
             // Act — SpawnAllPlayers 내부 배정 로직 재현
             for (ulong clientId = 0; clientId < 5; clientId++)
             {
-                bool isTarget = (identityMap.Count == 0);
-                int  key      = (int)(clientId % int.MaxValue);
-                identityMap[key] = new PlayerIdentity { JobId = 0, IsTarget = isTarget };
+                bool isTarget = (entries.Count == 0);
+                entries.Add(new PlayerIdentityEntry { ClientId = clientId, JobId = 0, IsTarget = isTarget });
             }
 
             // Assert
             int targetCount = 0;
-            foreach (var identity in identityMap.Values)
-                if (identity.IsTarget) targetCount++;
+            foreach (var entry in entries)
+                if (entry.IsTarget) targetCount++;
 
             Assert.AreEqual(1, targetCount, "왕족은 정확히 1명이어야 한다");
         }
@@ -138,24 +137,21 @@ namespace BeTheKing.Tests.Integration.Core
         public void test_identity_mvp_allJobIdZero()
         {
             // Arrange
-            var identityMap = new Dictionary<int, PlayerIdentity>();
+            var entries = new List<PlayerIdentityEntry>();
             for (ulong clientId = 0; clientId < 5; clientId++)
-            {
-                int key = (int)(clientId % int.MaxValue);
-                identityMap[key] = new PlayerIdentity { JobId = 0, IsTarget = clientId == 0 };
-            }
+                entries.Add(new PlayerIdentityEntry { ClientId = clientId, JobId = 0, IsTarget = clientId == 0 });
 
             // Assert
-            foreach (var identity in identityMap.Values)
-                Assert.AreEqual(0, identity.JobId, "MVP에서 직업 ID는 모두 0이어야 한다");
+            foreach (var entry in entries)
+                Assert.AreEqual(0, entry.JobId, "MVP에서 직업 ID는 모두 0이어야 한다");
         }
 
-        /// <summary>PlayerIdentity는 struct — 값 복사 시 독립적으로 동작한다.</summary>
+        /// <summary>PlayerIdentityEntry는 struct — 값 복사 시 독립적으로 동작한다.</summary>
         [Test]
         public void test_playerIdentity_isValueType()
         {
             // Arrange
-            var original = new PlayerIdentity { JobId = 0, IsTarget = true };
+            var original = new PlayerIdentityEntry { ClientId = 1, JobId = 0, IsTarget = true };
 
             // Act
             var copy = original;

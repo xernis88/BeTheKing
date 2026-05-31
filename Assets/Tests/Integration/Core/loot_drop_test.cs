@@ -9,6 +9,7 @@
 using System.Collections.Generic;
 using NUnit.Framework;
 using BeTheKing.CoreServices;
+using Unity.Netcode;
 using UnityEngine;
 
 namespace BeTheKing.Tests.Integration.Core
@@ -225,7 +226,7 @@ namespace BeTheKing.Tests.Integration.Core
     When:   PlayerHealthComponent에서 LootManager.Instance.OnPlayerDied(
                 clientId, deathPos, new[] { sword }) 호출
     Then:   사망 위치 반경 1.2f 이내에 WorldDropItem 오브젝트가 생성됨
-            WorldDropItem.Item.ItemId == 101
+            WorldDropItem.Item.Value.ItemId == 101
     Pass:   Hierarchy에서 WorldDropItem GameObject 확인
 
     ── 플레이테스트 AC-4: 월드 상자 배치 ───────────────────────────
@@ -240,4 +241,73 @@ namespace BeTheKing.Tests.Integration.Core
     Then:   클라이언트 화면에 동일 위치에 WorldDropItem 표시됨
     Pass:   클라이언트 Hierarchy에서 WorldDropItem 위치 좌표 일치 확인
     */
+
+    // ──────────────────────────────────────────────────────────────
+    // Sprint 4 / CS-004: WorldDropItem NetworkVariable 전환 테스트
+    // TC-CS004-NV-1 ~ NV-3 (자동화 범위)
+    // TC-CS004-NV-4 (PlayMode — NGO 런타임 의존, 플레이테스트 시나리오 문서화)
+    // ──────────────────────────────────────────────────────────────
+
+    [TestFixture]
+    [Category("LootDrop")]
+    public class WorldDropItemNetworkVariableTests
+    {
+        /// <summary>
+        /// TC-CS004-NV-1: WorldDropItem.Item 필드가 NetworkVariable&lt;ItemData&gt; 타입으로 선언됨.
+        /// </summary>
+        [Test]
+        public void test_worldDropItem_item_isNetworkVariableType()
+        {
+            var propType = typeof(WorldDropItem)
+                .GetProperty("Item",
+                    System.Reflection.BindingFlags.Public | System.Reflection.BindingFlags.Instance)
+                ?.PropertyType;
+            Assert.AreEqual(typeof(NetworkVariable<ItemData>), propType,
+                "Item 필드는 NetworkVariable<ItemData> 타입이어야 한다.");
+        }
+
+        /// <summary>
+        /// TC-CS004-NV-2: Initialize(item) 호출 후 Item.Value가 전달된 ItemData와 동일.
+        /// Spawn 전 NetworkVariable 초기화 패턴 (NGO 지원).
+        /// </summary>
+        [Test]
+        public void test_worldDropItem_initialize_setsItemValue()
+        {
+            // Arrange
+            var go = new UnityEngine.GameObject("TestDropItem");
+            var drop = go.AddComponent<WorldDropItem>();
+            var item = new ItemData { ItemId = 42, PrefabKey = "Sword_Rare", Grade = 1 };
+
+            // Act
+            drop.Initialize(item);
+
+            // Assert
+            Assert.AreEqual(42,           drop.Item.Value.ItemId,    "ItemId가 일치해야 한다.");
+            Assert.AreEqual("Sword_Rare", drop.Item.Value.PrefabKey, "PrefabKey가 일치해야 한다.");
+            Assert.AreEqual(1,            drop.Item.Value.Grade,     "Grade가 일치해야 한다.");
+
+            // Cleanup
+            UnityEngine.Object.DestroyImmediate(go);
+        }
+
+        /// <summary>
+        /// TC-CS004-NV-3: ItemData가 INetworkSerializable을 구현 (컴파일 타임 확인).
+        /// </summary>
+        [Test]
+        public void test_itemData_implementsINetworkSerializable()
+        {
+            Assert.IsTrue(
+                typeof(INetworkSerializable).IsAssignableFrom(typeof(ItemData)),
+                "ItemData는 INetworkSerializable을 구현해야 한다.");
+        }
+    }
+
+    /*
+     * TC-CS004-NV-4: 클라이언트 측 Item.Value 동기화 확인 (PlayMode 플레이테스트)
+     * Given: 서버에서 WorldDropItem NetworkObject 스폰, Initialize(item) 호출
+     * When:  클라이언트 A가 해당 NetworkObject의 Item.Value 접근
+     * Then:  서버와 동일한 ItemData(ItemId=42, PrefabKey, Grade) 반환
+     *
+     * 검증 방법: Unity Test Runner PlayMode (NGO Integration Test 환경)
+     */
 }
