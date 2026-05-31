@@ -290,13 +290,4 @@ namespace BeTheKing.CoreServices
         public Vector3 HalfExtents;
     }
 
-    /// <summary>
-    /// 일반 NPC 컴포넌트 — 직업 ID 보유.
-    /// 비주얼 메시 교체는 DisguiseSystem 담당 (Out of Scope).
-    /// </summary>
-    public class CivilianNpc : MonoBehaviour
-    {
-        /// <summary>배정된 직업 ID. DisguiseSystem이 읽어 메시를 교체한다.</summary>
-        public int NpcJobId { get; set; }
-    }
 }
