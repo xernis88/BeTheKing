@@ -37,7 +37,7 @@ namespace BeTheKing.Foundation
                 return;
             }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         public override void OnNetworkSpawn()

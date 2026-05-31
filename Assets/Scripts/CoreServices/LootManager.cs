@@ -46,7 +46,7 @@ namespace BeTheKing.CoreServices
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         public override void OnNetworkSpawn()
@@ -78,7 +78,7 @@ namespace BeTheKing.CoreServices
 
             foreach (ItemData item in inventory)
             {
-                if (item == null || !item.IsValid) continue;
+                if (!item.IsValid) continue;
                 Vector3 dropPos = GetValidDropPosition(deathPos);
                 SpawnDropItem(item, dropPos);
             }
@@ -200,12 +200,12 @@ namespace BeTheKing.CoreServices
                 return;
             }
 
-            // 아이템 데이터 초기화 (WorldDropItem 컴포넌트가 있다면 전달)
+            no.Spawn(destroyWithScene: true);
+
+            // Spawn() 이후 NetworkVariable 쓰기 — Spawn 전 쓰기는 NGO에서 무시됨
             WorldDropItem drop = go.GetComponent<WorldDropItem>();
             if (drop != null)
                 drop.Initialize(item);
-
-            no.Spawn(destroyWithScene: true);
             Debug.Log($"[LootManager] 드롭 스폰 — itemId={item.ItemId}, pos={pos}");
         }
 
@@ -230,7 +230,7 @@ namespace BeTheKing.CoreServices
             {
                 if (spawnPoint == null) continue;
                 ItemData item = GetRandomChestItem();
-                if (item == null) continue;
+                if (!item.IsValid) continue;
                 SpawnDropItem(item, spawnPoint.position);
             }
 
@@ -240,7 +240,7 @@ namespace BeTheKing.CoreServices
         /// <summary>ChestItemPool에서 랜덤 아이템 하나를 선택한다.</summary>
         private ItemData GetRandomChestItem()
         {
-            if (_config.ChestItemPool.Length == 0) return null;
+            if (_config.ChestItemPool.Length == 0) return default;
             return _config.ChestItemPool[Random.Range(0, _config.ChestItemPool.Length)];
         }
     }
@@ -253,13 +253,17 @@ namespace BeTheKing.CoreServices
     /// </summary>
     public class WorldDropItem : NetworkBehaviour
     {
-        /// <summary>서버에서 Spawn() 직전에 호출하여 아이템 데이터를 주입한다.</summary>
+        /// <summary>서버에서 Spawn() 직후에 호출하여 아이템 데이터를 주입한다.</summary>
         public void Initialize(ItemData item)
         {
-            Item = item;
+            Item.Value = item;
         }
 
-        /// <summary>이 드롭 오브젝트가 나타내는 아이템 데이터.</summary>
-        public ItemData Item { get; private set; }
+        /// <summary>이 드롭 오브젝트가 나타내는 아이템 데이터. 모든 클라이언트에서 읽기 가능.</summary>
+        public NetworkVariable<ItemData> Item { get; } = new(
+            default,
+            NetworkVariableReadPermission.Everyone,
+            NetworkVariableWritePermission.Server
+        );
     }
 }

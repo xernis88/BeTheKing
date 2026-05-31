@@ -52,7 +52,7 @@ namespace BeTheKing.Foundation
         {
             if (Instance != null) { Destroy(gameObject); return; }
             Instance = this;
-            DontDestroyOnLoad(gameObject);
+            DontDestroyOnLoad(transform.root.gameObject);
         }
 
         void OnEnable()
