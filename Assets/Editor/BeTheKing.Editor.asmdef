@@ -1,0 +1,22 @@
+{
+    "name": "BeTheKing.Editor",
+    "rootNamespace": "BeTheKing.Editor",
+    "references": [
+        "Unity.Netcode.Runtime",
+        "Unity.AI.Navigation",
+        "BeTheKing.Foundation",
+        "BeTheKing.CoreServices",
+        "BeTheKing.GameplaySystems"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
