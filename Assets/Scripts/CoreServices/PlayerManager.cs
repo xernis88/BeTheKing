@@ -104,10 +104,12 @@ namespace BeTheKing.CoreServices
                 return;
             }
 
-            var clients = GameNetworkManager.Instance.ConnectedClients;
-            for (int i = 0; i < clients.Count; i++)
+            // NGO 권위 목록 사용 — GameNetworkManager 래퍼는 Host clientId 누락 버그 있음 (ROOT-006)
+            var clientIds = new System.Collections.Generic.List<ulong>(
+                NetworkManager.Singleton.ConnectedClientsIds);
+            for (int i = 0; i < clientIds.Count; i++)
             {
-                ulong clientId = clients[i];
+                ulong clientId = clientIds[i];
                 var pos        = SpawnPointHelper.CalculatePosition(i);
 
                 var go = Instantiate(_playerPrefab, pos, Quaternion.identity);
