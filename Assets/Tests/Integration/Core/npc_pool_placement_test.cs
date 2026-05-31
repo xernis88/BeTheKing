@@ -24,8 +24,9 @@ namespace BeTheKing.Tests.Integration.Core
     {
         // ── Fixtures ───────────────────────────────────────────────────────────
 
-        private const int CivilianPerZone = 17;
-        private const int AssassinPerZone = 2;
+        // MVP config (ADR-003 MVP Revision: ≤5/zone, NpcPlacementConfig 기본값과 일치)
+        private const int CivilianPerZone = 1;
+        private const int AssassinPerZone = 1;
         private const int ZoneCount       = 4; // Central 제외
 
         // 구역 경계 — 250×250 마름모, 각 구역 중심 기준 50×50
@@ -64,30 +65,29 @@ namespace BeTheKing.Tests.Integration.Core
         [Test]
         public void test_npc_civilian_count_per_zone_is_within_range()
         {
-            // Arrange
-            const int minPerZone = 15;
-            const int maxPerZone = 20;
+            // Arrange — MVP: 1~5/zone (ADR-003 MVP Revision)
+            const int minPerZone = 1;
+            const int maxPerZone = 5;
 
             // Act: 구역별 배치 수량 계산 (실제 NPCManager 로직과 동일)
-            // 각 구역에 CivilianPerZone명씩 배치 → 범위 확인
             int countPerZone = CivilianPerZone;
 
             // Assert
             Assert.GreaterOrEqual(countPerZone, minPerZone,
                 $"구역당 일반 NPC {countPerZone}명은 최소 {minPerZone}명 미달");
             Assert.LessOrEqual(countPerZone, maxPerZone,
-                $"구역당 일반 NPC {countPerZone}명은 최대 {maxPerZone}명 초과");
+                $"구역당 일반 NPC {countPerZone}명은 최대 {maxPerZone}명 초과 (ADR-003 MVP)");
         }
 
         [Test]
-        public void test_npc_civilian_total_count_is_approximately_seventy()
+        public void test_npc_civilian_total_count_within_mvp_range()
         {
-            // Arrange + Act
+            // Arrange + Act — MVP: 총 4~20명 (1~5/zone × 4구역, ADR-003 ≤15 Update() 허용)
             int total = CivilianPerZone * ZoneCount;
 
-            // Assert: GDD 기준 ~70명 (60~75 허용 범위)
-            Assert.GreaterOrEqual(total, 60, $"일반 NPC 총 수 {total}명 부족");
-            Assert.LessOrEqual(total, 75,    $"일반 NPC 총 수 {total}명 과다");
+            // Assert
+            Assert.GreaterOrEqual(total, 4,  $"일반 NPC 총 수 {total}명 부족");
+            Assert.LessOrEqual(total, 20,    $"일반 NPC 총 수 {total}명 ADR-003 임계값 초과");
         }
 
         // ── AC-2: 자객 NPC 구역 분산 ───────────────────────────────────────────
@@ -95,9 +95,9 @@ namespace BeTheKing.Tests.Integration.Core
         [Test]
         public void test_npc_assassin_count_per_zone_is_within_range()
         {
-            // Arrange
-            const int minPerZone = 2;
-            const int maxPerZone = 3;
+            // Arrange — MVP: 1~5/zone
+            const int minPerZone = 1;
+            const int maxPerZone = 5;
 
             // Act
             int countPerZone = AssassinPerZone;
@@ -108,14 +108,14 @@ namespace BeTheKing.Tests.Integration.Core
         }
 
         [Test]
-        public void test_npc_assassin_total_count_is_eight_to_ten()
+        public void test_npc_assassin_total_count_within_mvp_range()
         {
-            // Arrange + Act
+            // Arrange + Act — MVP: 총 4~20마리 (ADR-003)
             int total = AssassinPerZone * ZoneCount;
 
-            // Assert: GDD 기준 8~10마리
-            Assert.GreaterOrEqual(total, 8,  $"자객 NPC 총 수 {total}마리 부족");
-            Assert.LessOrEqual(total, 10,    $"자객 NPC 총 수 {total}마리 과다");
+            // Assert
+            Assert.GreaterOrEqual(total, 4,  $"자객 NPC 총 수 {total}마리 부족");
+            Assert.LessOrEqual(total, 20,    $"자객 NPC 총 수 {total}마리 ADR-003 임계값 초과");
         }
 
         // ── AC-3: 왕자 NPC 초기 비활성 ────────────────────────────────────────
@@ -157,7 +157,7 @@ namespace BeTheKing.Tests.Integration.Core
             var jobPool = new List<int> { 1, 2, 3 };
             int jobIndex = 0;
 
-            // Act: 일반 NPC 17명에 순환 배정
+            // Act: 일반 NPC CivilianPerZone명에 순환 배정
             var assignedJobs = new List<int>();
             for (int i = 0; i < CivilianPerZone; i++)
                 assignedJobs.Add(jobPool[jobIndex++ % jobPool.Count]);
@@ -186,8 +186,8 @@ namespace BeTheKing.Tests.Integration.Core
             // Arrange
             var config = ScriptableObject.CreateInstance<NpcPlacementConfig>();
 
-            // Assert: GDD §3 수치 범위 준수
-            Assert.GreaterOrEqual(config.CivilianPerZone, 10);
+            // Assert: MVP 수치 범위 준수 (ADR-003 MVP: 1~5/zone, 풀비전 최대 25)
+            Assert.GreaterOrEqual(config.CivilianPerZone, 1);
             Assert.LessOrEqual(config.CivilianPerZone, 25);
 
             Assert.GreaterOrEqual(config.AssassinPerZone, 1);
