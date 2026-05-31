@@ -2,6 +2,7 @@
 // Story: production/epics/epic-core-services/story-003-npc-pool-placement.md
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -17,6 +18,9 @@ namespace BeTheKing.CoreServices
     public class NPCManager : NetworkBehaviour
     {
         public static NPCManager Instance { get; private set; }
+
+        /// <summary>Civilian NPC 스폰·JobId 배정 후 발행. DisguiseSystem이 구독하여 머티리얼 적용.</summary>
+        public static event System.Action<ulong, int> OnCivilianNpcSpawned;
 
         // ── Inspector ──────────────────────────────────────────────────────────
 
@@ -60,6 +64,8 @@ namespace BeTheKing.CoreServices
 
             if (GameStateManager.Instance != null)
                 GameStateManager.Instance.OnStateChanged += HandleStateChanged;
+            else
+                StartCoroutine(WaitAndSubscribeGameState());
         }
 
         public override void OnNetworkDespawn()
@@ -73,6 +79,12 @@ namespace BeTheKing.CoreServices
         {
             base.OnDestroy();
             if (Instance == this) Instance = null;
+        }
+
+        private IEnumerator WaitAndSubscribeGameState()
+        {
+            yield return new WaitUntil(() => GameStateManager.Instance != null);
+            GameStateManager.Instance.OnStateChanged += HandleStateChanged;
         }
 
         // ── State Handler ──────────────────────────────────────────────────────
@@ -110,7 +122,10 @@ namespace BeTheKing.CoreServices
 
                     // JobId 배정 — 순환 (AC-5)
                     if (no.TryGetComponent<CivilianNpc>(out var npc))
+                    {
                         npc.NpcJobId = jobPool[jobIndex++ % jobPool.Count];
+                        OnCivilianNpcSpawned?.Invoke(no.NetworkObjectId, npc.NpcJobId);
+                    }
                 }
 
                 for (int i = 0; i < _config.AssassinPerZone; i++)
@@ -124,8 +139,9 @@ namespace BeTheKing.CoreServices
         }
 
         /// <summary>
-        /// 왕자 NPC를 왕좌 영역(Central)에 배치하고 비활성화한다. (AC-3)
-        /// 3일차 CoronationTrigger가 ActivatePrince()를 호출해 활성화한다.
+        /// 왕자 NPC를 왕좌 영역(Central)에 Instantiate만 수행하고 비활성 상태로 유지한다. (AC-3)
+        /// Spawn은 하지 않으므로 클라이언트에 존재가 노출되지 않는다.
+        /// 3일차 CoronationTrigger → PrinceNPCAI.Activate() → 서버 gameObject 활성화 경로를 사용한다.
         /// </summary>
         private void PlacePrince()
         {
@@ -136,18 +152,23 @@ namespace BeTheKing.CoreServices
 
             var go = UnityEngine.Object.Instantiate(_princePrefab, pos, Quaternion.identity);
             _princeInstance = go.GetComponent<NetworkObject>();
-            _princeInstance.Spawn(destroyWithScene: true);
 
-            // 3일차 전까지 비활성 (AC-3)
-            _princeInstance.gameObject.SetActive(false);
+            // Spawn 전 비활성화 — 클라이언트에 존재 자체가 노출되지 않는다.
+            go.SetActive(false);
         }
 
-        /// <summary>왕자 NPC를 활성화한다. CoronationTrigger에서 호출 (Day 3 낮).</summary>
+        /// <summary>
+        /// 왕자 NPC를 활성화하고 Spawn한다. Day 3 대관식 시점에 호출.
+        /// PrinceNPCAI.Activate()가 gameObject.SetActive(true)를 수행하므로
+        /// 이 메서드는 Spawn 전 활성화 + Spawn 순서를 보장한다.
+        /// </summary>
         public void ActivatePrince()
         {
             if (!IsServer) return;
-            if (_princeInstance != null)
-                _princeInstance.gameObject.SetActive(true);
+            if (_princeInstance == null || _princeInstance.IsSpawned) return;
+
+            _princeInstance.gameObject.SetActive(true);
+            _princeInstance.Spawn(destroyWithScene: true);
         }
 
         // ── Pool Return API ────────────────────────────────────────────────────

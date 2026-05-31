@@ -37,6 +37,9 @@ namespace BeTheKing.CoreServices
         public event Action<ulong> OnPlayerSpawned;
         public event Action<ulong> OnPlayerDied;
 
+        /// <summary>플레이어 스폰 + 직업 배정 후 발행 (clientId, playerNetworkObjectId, jobId). DisguiseSystem 구독용.</summary>
+        public static event Action<ulong, ulong, int> OnPlayerSpawnedWithJob;
+
         /// <summary>전 클라이언트에 브로드캐스트되는 사망 공지 이벤트. UI 레이어에서 구독.</summary>
         public static event Action<ulong> OnPlayerDeathAnnounced;
 
@@ -118,12 +121,16 @@ namespace BeTheKing.CoreServices
                 no.SpawnAsPlayerObject(clientId);
 
                 bool isTarget = (_identityList.Count == 0);
+                int jobId = 0; // MVP: 단일 직업 (0). 직업 시스템 확장 시 변경.
                 _identityList.Add(new PlayerIdentityEntry
                 {
                     ClientId = clientId,
-                    JobId    = 0,
+                    JobId    = jobId,
                     IsTarget = isTarget
                 });
+
+                // DisguiseSystem이 구독하여 플레이어 머티리얼 적용
+                OnPlayerSpawnedWithJob?.Invoke(clientId, no.NetworkObjectId, jobId);
 
                 OnPlayerSpawned?.Invoke(clientId);
                 _aliveCount.Value++;
