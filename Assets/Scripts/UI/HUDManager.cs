@@ -211,7 +211,7 @@ namespace BeTheKing.UI
         private void UpdateSurvivorCount(int previous, int next)
         {
             if (_survivorText == null) return;
-            _survivorText.text = $"생존 {next}/{TotalPlayers}";
+            _survivorText.text = $"Alive {next}/{TotalPlayers}"; // TODO: 한국어 TMP 폰트 임포트 후 "생존"으로 교체
         }
 
         /// <summary>
