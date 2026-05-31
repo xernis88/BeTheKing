@@ -134,6 +134,7 @@ namespace BeTheKing.CoreServices
                 // DisguiseSystem이 구독하여 플레이어 머티리얼 적용
                 OnPlayerSpawnedWithJob?.Invoke(clientId, no.NetworkObjectId, jobId);
 
+
                 OnPlayerSpawned?.Invoke(clientId);
                 _aliveCount.Value++;
                 Debug.Log($"[PlayerManager] 스폰 — clientId={clientId}, zone={SpawnPointHelper.GetZoneIndex(i)}");
